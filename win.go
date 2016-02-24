@@ -41,6 +41,6 @@ var getch = func() (byte, error) {
 	if result > 0 {
 		return line[0], nil
 	} else {
-		return 13, err
+		return 0, err
 	}
 }
