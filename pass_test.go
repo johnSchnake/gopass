@@ -2,6 +2,7 @@ package gopass
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -95,6 +96,32 @@ func TestGetPasswd(t *testing.T) {
 			if input.Len() != d.byesLeft {
 				t.Errorf("Expected %v bytes left on buffer but instead got %v when masked=%v. %s", d.byesLeft, input.Len(), masked, d.reason)
 			}
+		}
+	}
+}
+
+// TestGetPasswd_Err tests errors are properly handled from getch()
+func TestGetPasswd_Err(t *testing.T) {
+	var inBuffer *bytes.Buffer
+	getch = func() (byte, error) {
+		b, err := inBuffer.ReadByte()
+		if err != nil {
+			return 13, err
+		}
+		if b == 'z' {
+			return 'z', fmt.Errorf("Forced error; byte returned should not be considered accurate.")
+		}
+		return b, nil
+	}
+
+	for input, expectedPassword := range map[string]string{"abc": "abc", "abzc": "ab"} {
+		inBuffer = bytes.NewBufferString(input)
+		p, err := GetPasswdMasked()
+		if string(p) != expectedPassword {
+			t.Errorf("Expected %q but got %q instead.", expectedPassword, p)
+		}
+		if err == nil {
+			t.Errorf("Expected error to be returned.")
 		}
 	}
 }
