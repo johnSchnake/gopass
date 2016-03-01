@@ -4,20 +4,22 @@ package gopass
 
 import (
 	"io"
-	"syscall"
+	"os"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-var getch = func() (byte, error) {
-	if oldState, err := terminal.MakeRaw(0); err != nil {
-		return 0, err
-	} else {
-		defer terminal.Restore(0, oldState)
+var defaultGetCh = func() (byte, error) {
+	if terminal.IsTerminal(int(os.Stdin.Fd())) {
+		if oldState, err := terminal.MakeRaw(int(os.Stdin.Fd())); err != nil {
+			return 0, err
+		} else {
+			defer terminal.Restore(int(os.Stdin.Fd()), oldState)
+		}
 	}
 
-	var buf [1]byte
-	if n, err := syscall.Read(0, buf[:]); n == 0 || err != nil {
+	buf := make([]byte, 1)
+	if n, err := os.Stdin.Read(buf); n == 0 || err != nil {
 		if err != nil {
 			return 0, err
 		}
@@ -25,3 +27,5 @@ var getch = func() (byte, error) {
 	}
 	return buf[0], nil
 }
+
+var getch = defaultGetCh

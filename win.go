@@ -5,7 +5,7 @@ package gopass
 import "syscall"
 import "unsafe"
 
-var getch = func() (byte, error) {
+var defaultGetCh = func() (byte, error) {
 	modkernel32 := syscall.NewLazyDLL("kernel32.dll")
 	procReadFile := modkernel32.NewProc("ReadFile")
 	procGetConsoleMode := modkernel32.NewProc("GetConsoleMode")
@@ -44,3 +44,5 @@ var getch = func() (byte, error) {
 		return 0, err
 	}
 }
+
+var getch = defaultGetCh
